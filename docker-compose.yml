@@ -1,0 +1,31 @@
+services:
+  api:
+    build: ./backend
+    env_file: ./backend/.env
+    environment:
+      NODE_ENV: production
+      PORT: 5050
+      TRUST_PROXY: 1
+      # MySQL runs on the host machine, not in this compose project.
+      DB_HOST: host.docker.internal
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    expose:
+      - "5050"
+
+  web:
+    build: ./frontend
+    depends_on:
+      - api
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop: [ALL]
+    ports:
+      # Put a TLS-terminating reverse proxy / load balancer in front of this port.
+      - "8080:8080"
